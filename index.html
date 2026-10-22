@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check-in Kick-off · Bénévoles</title>
+<style>
+  :root { --jaune:#FFC600; --noir:#1b1b1f; --gris:#6b6b73; --fond:#f5f5f7; --vert:#1b8a3a; --orange:#e08600; --rouge:#c62828; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--fond); color:var(--noir); }
+  .wrap { max-width:560px; margin:0 auto; padding-bottom:40px; }
+  header { background:var(--noir); color:#fff; padding:16px 18px; border-bottom:5px solid var(--jaune); }
+  header .club { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--jaune); font-weight:700; }
+  header h1 { margin:4px 0 0; font-size:20px; }
+  .card { background:#fff; margin:12px; padding:16px; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  [hidden] { display:none !important; }
+  input[type=text], input[type=password], input[type=number], input[type=search] { width:100%; padding:13px 12px; font-size:16px; border:1.5px solid #d4d4da; border-radius:10px; }
+  input:focus { outline:none; border-color:var(--noir); box-shadow:0 0 0 3px rgba(255,198,0,.55); }
+  button, label.gros { font:inherit; }
+  .gros { display:block; width:100%; margin-top:10px; padding:15px; font-size:16px; font-weight:700; border:none; border-radius:12px; background:var(--jaune); color:var(--noir); text-align:center; cursor:pointer; }
+  .gros.alt { background:var(--noir); color:#fff; }
+  .gros.vert { background:var(--vert); color:#fff; }
+  .gros.gris { background:#e6e6ea; color:var(--noir); }
+  .gros:disabled { opacity:.6; }
+  .ligne { display:flex; gap:8px; margin-top:10px; } .ligne input { flex:1; min-width:0; } .ligne button { width:80px; border:none; border-radius:10px; background:var(--noir); color:#fff; font-weight:700; font-size:16px; }
+  .stats { display:flex; gap:6px; margin:12px 12px 0; }
+  .stats div { flex:1; background:#fff; border-radius:10px; padding:8px 4px; text-align:center; font-size:11.5px; color:var(--gris); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .stats b { display:block; font-size:19px; color:var(--noir); }
+  .tabs { display:flex; gap:6px; margin:12px 12px 0; }
+  .tabs button { flex:1; padding:12px 4px; border:1.5px solid #d4d4da; background:#fff; border-radius:10px; font-weight:700; font-size:14px; }
+  .tabs button.on { background:var(--jaune); border-color:var(--noir); }
+  .consigne { font-size:13.5px; color:var(--gris); margin-bottom:4px; line-height:1.4; }
+  #reader { width:100%; margin-top:10px; border-radius:10px; overflow:hidden; }
+  #resultatsRecherche button { display:block; width:100%; text-align:left; margin-top:6px; padding:11px 12px; border:1px solid #e0e0e5; background:#fafafa; border-radius:10px; font-size:15px; }
+  #resultatsRecherche small { color:var(--gris); }
+  .res { margin:12px; border-radius:14px; padding:16px; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.1); border-left:10px solid #bbb; }
+  .res.vert { border-left-color:var(--vert); } .res.orange { border-left-color:var(--orange); } .res.rouge { border-left-color:var(--rouge); }
+  .verdict { font-size:22px; font-weight:800; margin:0 0 8px; }
+  .res.vert .verdict { color:var(--vert); } .res.orange .verdict { color:var(--orange); } .res.rouge .verdict { color:var(--rouge); }
+  .nom { font-size:22px; font-weight:700; } .id { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:18px; letter-spacing:.05em; margin:2px 0 8px; }
+  .infos { font-size:14.5px; line-height:1.7; margin:8px 0; }
+  .bandeau { padding:10px 12px; border-radius:10px; font-size:14px; margin:10px 0; line-height:1.4; }
+  .bandeau.vert { background:#e6f4ea; } .bandeau.orange { background:#fff3e0; } .bandeau.rouge { background:#fdecea; }
+  .erreurLogin { color:var(--rouge); margin-top:10px; font-size:14px; }
+  .montant { margin-top:10px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="club">Enactus ENSA Kénitra · Kick-off</div>
+    <h1>Espace bénévoles</h1>
+  </header>
+
+  <!-- CONNEXION -->
+  <section id="vueLogin" class="card">
+    <div class="consigne">Entre le code PIN donné par l’équipe.</div>
+    <input type="password" id="pin" inputmode="numeric" autocomplete="off" placeholder="Code PIN">
+    <button id="btnLogin" class="gros">Entrer</button>
+    <div id="erreurLogin" class="erreurLogin" hidden></div>
+  </section>
+
+  <!-- APPLICATION -->
+  <section id="vueApp" hidden>
+    <div class="stats" id="stats"></div>
+    <nav class="tabs">
+      <button data-m="1" class="on">1 · Scan</button>
+      <button data-m="2">2 · Adhérent</button>
+      <button data-m="3">3 · Bracelet</button>
+    </nav>
+
+    <div class="card">
+      <div id="consigne" class="consigne"></div>
+      <button id="btnCam" class="gros">📷 Scanner avec la caméra</button>
+      <div id="reader"></div>
+      <label for="photo" class="gros alt">📸 Prendre une photo du QR</label>
+      <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+      <div class="ligne">
+        <input type="text" id="idManuel" placeholder="ID : KO-XXXXXX" autocapitalize="characters" autocomplete="off">
+        <button id="btnId">OK</button>
+      </div>
+      <input type="search" id="recherche" placeholder="🔎 Chercher par nom ou téléphone" style="margin-top:10px" autocomplete="off">
+      <div id="resultatsRecherche"></div>
+    </div>
+
+    <div id="resultat"></div>
+  </section>
+</main>
+<div id="readerFile" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  let PIN = '', mode = 1, occupe = false, dernier = '', dernierT = 0, cam = null, camOn = false, prix = 0, minuteur = null;
+
+  const CONSIGNES = {
+    1: 'Poste 1 · Vérification : scanne le QR du participant. La présence est enregistrée automatiquement.',
+    2: 'Poste 2 · Statut d’adhérent : identifie le participant (scan, ID ou recherche), compare avec la liste officielle, puis confirme.',
+    3: 'Poste 3 · Bracelets : adhérent confirmé = gratuit. Externe qui joue = paiement puis bracelet.'
+  };
+
+  // ⚠️ Colle ici le lien de ton application (celui qui se termine par /exec, SANS ?page=staff)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzo9gOtuO4K9otGs0tYTHTAEA6xfGwzuZqJkSCGthVHkEb7sT5m5pmzVm1lwORl7qNX/exec';
+
+  async function appel(fn, ...args) {
+    if (API_URL.indexOf('script.google.com') < 0) throw new Error('Lien /exec non configuré dans la page.');
+    let rep;
+    try {
+      rep = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ fn: fn, pin: PIN, args: args }), redirect: 'follow' });
+    } catch (e) {
+      throw new Error('Connexion impossible. Vérifie Internet et réessaie.');
+    }
+    let j;
+    try { j = await rep.json(); } catch (e) { throw new Error('Réponse invalide du serveur. Vérifie le lien /exec et le déploiement.'); }
+    if (!j.ok) throw new Error(j.error);
+    return j.data;
+  }
+  const msgErreur = e => String((e && e.message) || e || 'Erreur').replace(/^Error:\s*/, '');
+
+  // ---------- Connexion ----------
+  async function connexion() {
+    PIN = $('pin').value.trim();
+    $('erreurLogin').hidden = true;
+    $('btnLogin').disabled = true;
+    try {
+      const r = await appel('staffLogin');
+      prix = r.prix || 0;
+      $('vueLogin').hidden = true; $('vueApp').hidden = false;
+      changerMode(1); majStats();
+    } catch (e) {
+      $('erreurLogin').textContent = msgErreur(e); $('erreurLogin').hidden = false;
+    }
+    $('btnLogin').disabled = false;
+  }
+  $('btnLogin').onclick = connexion;
+  $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') connexion(); });
+
+  // ---------- Statistiques ----------
+  async function majStats() {
+    try {
+      const s = await appel('getStats');
+      $('stats').innerHTML =
+        '<div><b>' + s.inscrits + '</b>Inscrits</div>' +
+        '<div><b>' + s.presents + '</b>Présents</div>' +
+        '<div><b>' + s.bracelets + '</b>Bracelets</div>' +
+        '<div><b>' + s.encaisse + '</b>MAD reçus</div>';
+    } catch (e) {}
+  }
+
+  // ---------- Onglets ----------
+  function changerMode(m) {
+    mode = m;
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === m));
+    $('consigne').textContent = CONSIGNES[m];
+    $('resultat').innerHTML = '';
+    $('resultatsRecherche').innerHTML = '';
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => changerMode(Number(b.dataset.m)));
+
+  // ---------- Scan ----------
+  function onScan(texte) {
+    texte = String(texte || '').trim().toUpperCase();
+    if (!texte || occupe) return;
+    if (texte === dernier && Date.now() - dernierT < 5000) return;
+    dernier = texte; dernierT = Date.now();
+    traiter(texte, false);
+  }
+
+  async function demarrerCamera() {
+    if (typeof Html5Qrcode === 'undefined') { alerteScan('Le module de scan ne s’est pas chargé (Internet ?). Utilise « Photo du QR » ou saisis l’ID.'); return; }
+    try {
+      cam = new Html5Qrcode('reader');
+      await cam.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 230, height: 230 } }, onScan, () => {});
+      camOn = true; $('btnCam').textContent = '⏹ Arrêter la caméra';
+    } catch (e) {
+      camOn = false; $('btnCam').textContent = '📷 Scanner avec la caméra';
+      alerteScan('Caméra bloquée sur ce téléphone. Utilise « Photo du QR » ou saisis l’ID.');
+    }
+  }
+  async function arreterCamera() {
+    try { if (cam) { await cam.stop(); cam.clear(); } } catch (e) {}
+    camOn = false; $('btnCam').textContent = '📷 Scanner avec la caméra';
+  }
+  $('btnCam').onclick = () => camOn ? arreterCamera() : demarrerCamera();
+
+  $('photo').addEventListener('change', async ev => {
+    const fichier = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!fichier) return;
+    if (typeof Html5Qrcode === 'undefined') { alerteScan('Module de scan indisponible. Saisis l’ID.'); return; }
+    try {
+      const lecteur = new Html5Qrcode('readerFile');
+      const texte = await lecteur.scanFile(fichier, false);
+      try { lecteur.clear(); } catch (e) {}
+      dernier = ''; onScan(texte);
+    } catch (e) {
+      alerteScan('QR non lu sur la photo. Rapproche-toi, évite les reflets, et réessaie (ou saisis l’ID).');
+    }
+  });
+
+  function alerteScan(m) { $('resultat').innerHTML = '<div class="res orange"><p class="verdict">⚠️ ' + esc(m) + '</p></div>'; }
+
+  // ---------- Saisie manuelle & recherche ----------
+  function validerId() {
+    const id = $('idManuel').value.trim().toUpperCase();
+    if (id) { dernier = ''; traiter(id, false); }
+  }
+  $('btnId').onclick = validerId;
+  $('idManuel').addEventListener('keydown', e => { if (e.key === 'Enter') validerId(); });
+
+  $('recherche').addEventListener('input', () => {
+    clearTimeout(minuteur);
+    const q = $('recherche').value.trim();
+    if (q.length < 2) { $('resultatsRecherche').innerHTML = ''; return; }
+    minuteur = setTimeout(async () => {
+      try {
+        const liste = await appel('rechercher', q);
+        $('resultatsRecherche').innerHTML = liste.length
+          ? liste.map(p => '<button data-id="' + esc(p.id) + '"><b>' + esc(p.nom + ' ' + p.prenom) + '</b><br><small>' + esc(p.id) + ' · ' + esc(p.niveau) + (p.present ? ' · ✔ présent' : '') + '</small></button>').join('')
+          : '<div class="consigne" style="margin-top:8px">Aucun résultat.</div>';
+      } catch (e) { $('resultatsRecherche').innerHTML = '<div class="consigne">' + esc(msgErreur(e)) + '</div>'; }
+    }, 350);
+  });
+  $('resultatsRecherche').addEventListener('click', e => {
+    const b = e.target.closest('button[data-id]');
+    if (b) { traiter(b.dataset.id, true); }
+  });
+
+  // ---------- Traitement ----------
+  async function traiter(id, viaRecherche) {
+    if (occupe) return;
+    occupe = true;
+    $('resultat').innerHTML = '<div class="res"><p class="verdict" style="color:#555">Vérification…</p></div>';
+    try {
+      if (mode === 1 && !viaRecherche) {
+        afficherCheckin(await appel('scanCheckin', id));
+      } else {
+        const r = await appel('getParticipant', id);
+        if (r.status !== 'ok') afficherInconnu(id); else afficherFiche(r.p);
+      }
+      majStats();
+    } catch (e) {
+      $('resultat').innerHTML = '<div class="res rouge"><p class="verdict">❌ ' + esc(msgErreur(e)) + '</p></div>';
+    } finally { occupe = false; }
+  }
+
+  function afficherInconnu(id) {
+    $('resultat').innerHTML = '<div class="res rouge"><p class="verdict">❌ QR INCONNU</p><div class="infos">Aucune inscription ne correspond à « ' + esc(id) + ' ». Utilise la recherche par nom ou téléphone.</div></div>';
+  }
+
+  function blocIdentite(p) {
+    return '<div class="nom">' + esc(p.prenom + ' ' + p.nom) + '</div><div class="id">' + esc(p.id) + '</div>' +
+           '<div class="infos">Niveau : <b>' + esc(p.niveau) + '</b>' + (p.telMasque ? ' · Tél : ' + esc(p.telMasque) : '') + '<br>Adhérent déclaré : <b>' + esc(p.adherentDeclare) + '</b></div>';
+  }
+
+  // POSTE 1
+  function afficherCheckin(r) {
+    if (r.status === 'inconnu') return afficherInconnu(r.id);
+    const p = r.p;
+    if (r.status === 'ok') {
+      $('resultat').innerHTML = '<div class="res vert"><p class="verdict">✅ VALIDE · entrée enregistrée</p>' + blocIdentite(p) +
+        '<div class="infos">Heure : ' + esc(p.heureCheckin) + '<br>➡️ Orienter vers le poste 2.</div></div>';
+    } else {
+      $('resultat').innerHTML = '<div class="res orange"><p class="verdict">⚠️ DÉJÀ ENREGISTRÉ</p>' + blocIdentite(p) +
+        '<div class="infos">Premier passage : <b>' + esc(p.heureCheckin) + '</b><br>Ne pas revalider sans vérifier l’identité.</div></div>';
+    }
+  }
+
+  // FICHE (postes 1 recherche, 2 et 3)
+  function afficherFiche(p, note, typeNote) {
+    let h = '<div class="res ' + (p.present ? 'vert' : 'orange') + '">' + blocIdentite(p);
+    h += '<div class="infos">Check-in : <b>' + (p.present ? '✔ fait (' + esc(p.heureCheckin) + ')' : '✘ pas encore') + '</b><br>' +
+         'Adhérent confirmé : <b>' + (p.adherentConfirme === 'Oui' ? '✅ Oui' : p.adherentConfirme === 'Non' ? '🧾 Non (externe)' : 'pas encore vérifié') + '</b><br>' +
+         'Bracelet : <b>' + (p.bracelet ? esc(p.bracelet) : '—') + '</b>' + (p.paiement ? ' · Payé : <b>' + esc(p.paiement) + ' MAD</b>' : '') + '</div>';
+    if (note) h += '<div class="bandeau ' + (typeNote || 'vert') + '">' + esc(note) + '</div>';
+
+    if (mode === 1) {
+      h += p.present ? '' : '<button class="gros vert" data-a="valider" data-id="' + esc(p.id) + '">✅ Valider l’entrée</button>';
+    } else if (mode === 2) {
+      const sug = { tel: ['vert', '✅ Trouvé dans la liste officielle (téléphone identique).'],
+                    nom: ['orange', '🟠 Nom trouvé dans la liste mais téléphone différent : à vérifier avant de confirmer.'],
+                    absent: ['rouge', '🔴 Absent de la liste officielle. Vérifie si nécessaire avant de le classer externe.'],
+                    'liste vide': ['orange', 'La liste des adhérents est vide dans le Sheet.'] }[p.suggestion];
+      if (sug) h += '<div class="bandeau ' + sug[0] + '">' + sug[1] + '</div>';
+      h += '<button class="gros vert" data-a="adh-oui" data-id="' + esc(p.id) + '">✅ Confirmer : ADHÉRENT</button>' +
+           '<button class="gros gris" data-a="adh-non" data-id="' + esc(p.id) + '">🧾 Confirmer : EXTERNE</button>';
+    } else {
+      if (!p.present) h += '<div class="bandeau rouge">Check-in non fait : renvoyer au poste 1.</div>';
+      else if (!p.adherentConfirme) h += '<div class="bandeau rouge">Statut non vérifié : renvoyer au poste 2.</div>';
+      else if (p.bracelet) h += '<div class="bandeau orange">Déjà traité : ' + esc(p.bracelet) + '.</div>';
+      else if (p.adherentConfirme === 'Oui') {
+        h += '<button class="gros vert" data-a="brac-adh" data-id="' + esc(p.id) + '">🎁 Remettre le bracelet (gratuit)</button>' +
+             '<button class="gros gris" data-a="brac-sans" data-id="' + esc(p.id) + '">Sans bracelet</button>';
+      } else {
+        h += '<div class="montant"><label for="montant"><b>Montant reçu (MAD)</b></label>' +
+             '<input type="number" id="montant" inputmode="decimal" min="0" step="any" value="' + (prix > 0 ? prix : '') + '"></div>' +
+             '<button class="gros vert" data-a="brac-pay" data-id="' + esc(p.id) + '">💰 Paiement reçu + bracelet</button>' +
+             '<button class="gros gris" data-a="brac-sans" data-id="' + esc(p.id) + '">Ne joue pas (sans bracelet)</button>';
+      }
+    }
+    h += '</div>';
+    $('resultat').innerHTML = h;
+  }
+
+  // Boutons d'action de la fiche
+  $('resultat').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]');
+    if (!b || occupe) return;
+    occupe = true; b.disabled = true;
+    const id = b.dataset.id, a = b.dataset.a;
+    try {
+      if (a === 'valider') {
+        afficherCheckin(await appel('scanCheckin', id));
+      } else if (a === 'adh-oui' || a === 'adh-non') {
+        const r = await appel('setStatutAdherent', id, a === 'adh-oui' ? 'Oui' : 'Non');
+        afficherFiche(r.p, a === 'adh-oui' ? 'Statut enregistré : adhérent confirmé. ➡️ Poste 3.' : 'Statut enregistré : externe. ➡️ Poste 3.', 'vert');
+      } else {
+        const action = a === 'brac-adh' ? 'adherent' : a === 'brac-pay' ? 'paye' : 'sans';
+        const montant = $('montant') ? $('montant').value : '';
+        const r = await appel('braceletAction', id, action, montant);
+        if (r.status === 'ok') afficherFiche(r.p, action === 'sans' ? 'Enregistré : sans bracelet.' : 'Enregistré ✔ Bracelet remis.', 'vert');
+        else afficherFiche(r.p, r.message, r.status === 'deja' ? 'orange' : 'rouge');
+      }
+      majStats();
+    } catch (err) {
+      $('resultat').innerHTML = '<div class="res rouge"><p class="verdict">❌ ' + esc(msgErreur(err)) + '</p></div>';
+    } finally { occupe = false; }
+  });
+</script>
+</body>
+</html>
